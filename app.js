@@ -1,64 +1,46 @@
-const express = require('express');
-const hbs = require("hbs");
-const path = require("path");
-const app = express();
+var fetchWeather = "/weather";
 
-const weatherData = require('../utils/weatherData');
+const weatherForm = document.querySelector('form');
+const search = document.querySelector('input');
 
-const port = process.env.PORT || 5099
+const weatherIcon = document.querySelector('.weatherIcon i');
+const weatherCondition = document.querySelector('.weatherCondition');
 
-const publicStaticDirPath = path.join(__dirname, '../public')
- 
-const viewsPath = path.join(__dirname, '../templates/views');
+const tempElement = document.querySelector('.temperature span');
 
-const partialsPath = path.join(__dirname, '../templates/partials');
+const locationElement = document.querySelector('.place');
 
-app.set('view engine', 'hbs');
-app.set('views', viewsPath);
-hbs.registerPartials(partialsPath);
-app.use(express.static(publicStaticDirPath));
+const dateElement = document.querySelector('.date');
 
-app.get('', (req, res) => {
-    res.render('index',{
-    title:'Weather App'
-    })
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
+dateElement.textContent = new Date().getDate() + ", " + monthNames[new Date().getMonth()].substring(0, 3);
+
+
+weatherForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    locationElement.textContent = "Loading...";
+    tempElement.textContent = "";
+    weatherCondition.textContent = "";
+    const locationApi = fetchWeather + "?address=" + search.value;
+    fetch(locationApi).then(response => {
+        response.json().then(data => {
+            if(data.error) {
+                locationElement.textContent = data.error;
+                tempElement.textContent = "";
+                weatherCondition.textContent = "";
+            } else {
+                console.log()
+                if(data.description === "rain" || data.description === "fog") {
+                    weatherIcon.className = "wi wi-day-" + data.description
+                }              
+                else {
+                    weatherIcon.className = "wi wi-day-cloudy"
+                }
+                locationElement.textContent = data.cityName;
+                tempElement.textContent = (data.temperature - 273.5).toFixed(2) + String.fromCharCode(176);
+                weatherCondition.textContent = data.description.toUpperCase();
+            }
+        }) 
+    });
 })
-
-
-app.get('/weather', (req, res) => {    
-    const address = req.query.address
-    if(!address){
-        return res.send({
-            error: "You must enter address in search text box"
-        })
-    }
-    
-    weatherData(address,(error,{temperature, description, cityName}={})=>{
-        if(error) {
-            return res.send({
-                error
-            })
-        }
-        console.log(temperature, description, cityName);
-        res.send({
-            temperature,
-            description,
-            cityName
-        })
-    })
-});
-
-app.get("*", (req, res) => {
-    res.render('404',{
-        title: "page not found"
-    })
-})
-
-
-app.listen(port, () => {
-    console.log("Server is up and running on port: ", port);
-})
-
-
-
-
