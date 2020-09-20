@@ -31,7 +31,8 @@ weatherForm.addEventListener('submit', (event) => {
                 weatherCondition.textContent = "";
             } else {
                 console.log()
-                if(data.description === "rain" || data.description === "fog") {
+                if(data.description === "rain" || data.description === "fog")
+                {
                     weatherIcon.className = "wi wi-day-" + data.description
                 }              
                 else {
